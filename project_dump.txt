@@ -1,0 +1,1306 @@
+
+--- FILE: C:\Users\GF63-10SC-238MY\Desktop\echoaura\src\components\AiChatbot.jsx ---
+
+import React, { useState, useRef, useEffect } from 'react';
+import { MessageSquareCode, X, Send, Bot, Loader2, HeartPulse, Activity } from 'lucide-react';
+
+export default function AiChatbot() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [input, setInput] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const [messages, setMessages] = useState([
+    { role: 'bot', text: 'EchoAura v3.0 Online. Local Inference Engine active. Systems nominal. How can I assist, Irfan?' }
+  ]);
+  
+  const scrollRef = useRef(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, isTyping]);
+
+  // --- THE MASTER MOCK ENGINE ---
+  // Designed to capture almost any user intent related to the product or general queries.
+  const generateMockResponse = (query) => {
+    const q = query.toLowerCase();
+    
+    // 1. GREETINGS & PERSONAL
+    if (q.includes("hi") || q.includes("hello") || q.includes("hey")) 
+      return "Greetings, Irfan. All telemetry links are green. I am ready to analyze the Titanium valve performance or your RPA data flows.";
+    if (q.includes("who are you") || q.includes("echoaura")) 
+      return "I am the EchoAura AI Core, a specialized LLM for hemodynamic monitoring and prosthetic valve telemetry.";
+
+    // 2. CLINICAL PARAMETERS (DOPPLER DATA)
+    if (q.includes("velocity") || q.includes("peak") || q.includes("speed")) 
+      return "Current Peak Velocity is 2.4 m/s. Threshold: <3.0 m/s. Interpretation: Non-stenotic, laminar flow detected.";
+    if (q.includes("gradient") || q.includes("pressure") || q.includes("mmhg")) 
+      return "Mean Gradient is 14 mmHg. Pressure drop across the Titanium valve is within optimal clinical parameters (Ref: <20 mmHg).";
+    if (q.includes("eoa") || q.includes("area") || q.includes("orifice")) 
+      return "Effective Orifice Area (EOA) is 1.5 cm². This confirms the valve opening is sufficient for the patient's body surface area.";
+    if (q.includes("dvi") || q.includes("index")) 
+      return "DVI is 0.38 (V_lvot/V_as). Formula check: Stable. A value >0.30 indicates no significant prosthesis-patient mismatch.";
+
+    // 3. HEART DISEASE & PATHOLOGY
+    if (q.includes("stenosis") || q.includes("narrowing") || q.includes("as")) 
+      return "Zero signs of stenosis. The Titanium Grade 5 leaflets show perfect mobility with no calcification markers detected.";
+    if (q.includes("leak") || q.includes("regurgitation") || q.includes("pvl")) 
+      return "Paravalvular leakage check: NEGATIVE. The mechanical seal is maintaining 100% integrity during diastole.";
+    if (q.includes("thrombosis") || q.includes("clot") || q.includes("blood")) 
+      return "Thrombosis risk: LOW. The valve's biocompatible coating minimizes protein adhesion, reducing the need for high-dose anticoagulants.";
+    if (q.includes("failure") || q.includes("chf") || q.includes("risk")) 
+      return "AI Risk Engine status: STABLE. Cardiac output is optimized, and ventricular load is reduced compared to pre-op baseline.";
+
+    // 4. PRODUCT & TECHNICAL SPECS
+    if (q.includes("titanium") || q.includes("material") || q.includes("made of")) 
+      return "The valve utilizes Aerospace-grade Titanium (Grade 5) for the housing, providing unmatched durability and MRI compatibility.";
+    if (q.includes("rpa") || q.includes("automate") || q.includes("sql") || q.includes("data")) 
+      return "Data integration: Live. I am pulling from SQL Server via Power Automate Desktop. All telemetry is logged in the SSRS reporting engine.";
+    if (q.includes("malaysia") || q.includes("kuala lumpur") || q.includes("lhdn") || q.includes("padu")) 
+      return "System linked to Malaysian medical data standards. I can synchronize telemetry with Suara Rakyat or PADU-compliant healthcare modules.";
+
+    // 5. MATH & PHYSICS (THE "SMART" STUFF)
+    if (q.includes("calculate") || q.includes("formula") || q.includes("bernoulli")) 
+      return "I use the Simplified Bernoulli Equation: ΔP = 4v². For our current 2.4 m/s velocity, the peak gradient calculates to 23.04 mmHg.";
+
+    // 6. EMERGENCY & CRITICAL
+    if (q.includes("emergency") || q.includes("critical") || q.includes("danger") || q.includes("bad")) 
+      return "ALERT PROTOCOL: If Velocity hits 4.0 m/s or Gradient exceeds 40 mmHg, I will trigger a high-priority RPA alert to the on-call surgical team.";
+
+    // 7. DEVELOPER / META
+    if (q.includes("coding") || q.includes("react") || q.includes("gemini")) 
+      return "This interface is running on React with a mock-inference engine to ensure 0ms latency during your demonstration.";
+
+    // DEFAULT FALLBACK (Universal Response)
+    return "Query analyzed. Hemodynamic metrics remain in the healthy range. Would you like a detailed breakdown of the Valve Area or the Stenosis risk index?";
+  };
+
+  const handleSend = () => {
+    if (!input.trim()) return;
+
+    const userMessage = { role: 'user', text: input };
+    setMessages(prev => [...prev, userMessage]);
+    const currentInput = input;
+    setInput("");
+    setIsTyping(true);
+
+    // Realistic "AI Thinking" delay
+    setTimeout(() => {
+      const botText = generateMockResponse(currentInput);
+      setMessages(prev => [...prev, { role: 'bot', text: botText }]);
+      setIsTyping(false);
+    }, 1100);
+  };
+
+  return (
+    <div className="fixed bottom-6 right-6 z-50 font-sans">
+      {isOpen ? (
+        <div className="w-80 md:w-96 h-[550px] bg-[#020617] rounded-3xl shadow-[0_20px_80px_rgba(0,0,0,0.8)] flex flex-col border border-white/10 overflow-hidden animate-in slide-in-from-bottom-5">
+          
+          {/* HEADER */}
+          <div className="bg-cyan-500 p-5 flex justify-between items-center shadow-lg">
+            <div className="flex items-center gap-3 text-black font-black uppercase text-[10px] tracking-[0.2em]">
+              <div className="bg-black p-1.5 rounded-lg text-cyan-400 shadow-inner">
+                <Activity size={18} />
+              </div>
+              EchoAura v3.0 Core
+            </div>
+            <button onClick={() => setIsOpen(false)} className="text-black hover:rotate-90 transition-transform">
+              <X size={20} />
+            </button>
+          </div>
+          
+          {/* CHAT AREA */}
+          <div ref={scrollRef} className="flex-1 p-5 overflow-y-auto space-y-4 bg-slate-950/40 custom-scrollbar">
+            {messages.map((m, i) => (
+              <div key={i} className={`flex ${m.role === 'bot' ? 'justify-start' : 'justify-end'}`}>
+                <div className={`p-4 rounded-2xl max-w-[85%] text-[11px] leading-relaxed transition-all shadow-sm ${
+                  m.role === 'bot' 
+                  ? 'bg-slate-900 text-slate-200 border border-white/5 rounded-bl-none' 
+                  : 'bg-cyan-500 text-black font-bold rounded-br-none shadow-md border-b-2 border-cyan-600'
+                }`}>
+                  {m.text}
+                </div>
+              </div>
+            ))}
+            {isTyping && (
+              <div className="flex items-center gap-2 text-cyan-400 font-mono text-[9px] tracking-widest animate-pulse ml-1">
+                <Loader2 size={12} className="animate-spin" />
+                ANALYZING_TELEMETRY...
+              </div>
+            )}
+          </div>
+
+          {/* INPUT AREA */}
+          <div className="p-4 bg-slate-900 border-t border-white/5 flex gap-2">
+            <input 
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+              placeholder="Query heart telemetry..." 
+              className="bg-black text-white text-[11px] flex-1 outline-none border border-white/10 p-3 rounded-xl focus:border-cyan-500 transition-all placeholder:text-slate-700"
+            />
+            <button 
+              onClick={handleSend} 
+              className="bg-cyan-500 p-3 rounded-xl text-black hover:bg-cyan-400 transition-all shadow-lg shadow-cyan-500/20 active:scale-95"
+            >
+              <Send size={18} />
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button 
+          onClick={() => setIsOpen(true)}
+          className="w-16 h-16 bg-cyan-500 rounded-2xl shadow-[0_15px_40px_rgba(6,182,212,0.4)] flex items-center justify-center text-black hover:scale-110 transition-all border-4 border-[#020617] group"
+        >
+          <MessageSquareCode size={30} className="group-hover:-rotate-6 transition-transform" />
+          <span className="absolute -top-1 -right-1 flex h-4 w-4">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-4 w-4 bg-cyan-500 border-2 border-black"></span>
+          </span>
+        </button>
+      )}
+    </div>
+  );
+}
+
+--- FILE: C:\Users\GF63-10SC-238MY\Desktop\echoaura\src\components\AiDiagnostics.jsx ---
+
+import React, { useState, useRef } from 'react';
+import { Upload, FileSearch, Activity, Wind, Timer, AlertTriangle, X, Image as ImageIcon } from 'lucide-react';
+
+export default function AiDiagnostics() {
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [results, setResults] = useState(null);
+  const fileInputRef = useRef(null);
+
+  // Handle File Selection
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setSelectedImage(reader.result);
+        setResults(null); // Clear previous results when new image is added
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const triggerUpload = () => {
+    fileInputRef.current.click();
+  };
+
+  const handleRunAnalysis = () => {
+    if (!selectedImage) return;
+    setIsAnalyzing(true);
+    
+    // Simulating AI Processing (Segmentation, Flow Recognition, Timing)
+    setTimeout(() => {
+      setResults({
+        efficiency: "88%",
+        jetFlow: "Trace Regurgitation Detected",
+        timing: "Normal Cycle (0.8s)",
+        classification: "Mild Dysfunction",
+        statusColor: "text-yellow-400",
+        bgColor: "bg-yellow-950/30",
+        borderColor: "border-yellow-500/20"
+      });
+      setIsAnalyzing(false);
+    }, 2500);
+  };
+
+  const clearImage = () => {
+    setSelectedImage(null);
+    setResults(null);
+  };
+
+  return (
+    <div className="p-8 space-y-6 bg-[#020617] min-h-screen text-slate-100">
+      {/* HEADER */}
+      <div className="flex justify-between items-end border-b border-white/10 pb-6">
+        <div>
+          <h1 className="text-4xl font-black tracking-tighter text-white uppercase">AI Analyzer Core</h1>
+          <p className="text-slate-400 font-medium font-mono text-xs">2D Echo • Doppler Waveform • Jet Flow Analysis</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-12 gap-8">
+        
+        {/* LEFT SIDE: UPLOAD & PREVIEW */}
+        <div className="col-span-12 lg:col-span-7 space-y-6">
+          <div className="bg-slate-900/50 border-2 border-dashed border-slate-700 rounded-3xl p-6 flex flex-col items-center justify-center text-center min-h-[450px] relative overflow-hidden">
+            
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              onChange={handleFileChange} 
+              className="hidden" 
+              accept="image/*"
+            />
+
+            {!selectedImage ? (
+              <div className="flex flex-col items-center animate-in fade-in duration-500">
+                <div className="w-20 h-20 bg-slate-800 rounded-3xl flex items-center justify-center mb-6 border border-white/5 shadow-xl">
+                  <Upload className="text-cyan-400" size={32} />
+                </div>
+                <h2 className="text-xl font-bold text-white mb-2">Input Clinical Data</h2>
+                <p className="text-slate-400 text-sm mb-8 px-12 max-w-md">
+                  Upload your 2D Echo images or Doppler waveforms to begin AI-assisted classification.
+                </p>
+                <button 
+                  onClick={triggerUpload}
+                  className="bg-slate-800 hover:bg-slate-700 text-white px-8 py-3 rounded-xl font-bold text-xs uppercase tracking-widest border border-white/10 transition-all"
+                >
+                  Select Scan File
+                </button>
+              </div>
+            ) : (
+              <div className="w-full h-full flex flex-col items-center relative animate-in zoom-in-95 duration-300">
+                <button 
+                  onClick={clearImage}
+                  className="absolute top-2 right-2 p-2 bg-red-500/80 rounded-full hover:bg-red-600 transition-colors z-10"
+                >
+                  <X size={16} className="text-white" />
+                </button>
+                <img 
+                  src={selectedImage} 
+                  alt="Scan Preview" 
+                  className="max-h-[350px] rounded-2xl border border-white/10 shadow-2xl object-contain bg-black/40"
+                />
+                <p className="mt-4 text-[10px] font-mono text-cyan-400 uppercase tracking-widest">Image Loaded into Buffer</p>
+              </div>
+            )}
+            
+            {/* OVERLAY FOR ANALYSIS */}
+            {isAnalyzing && (
+              <div className="absolute inset-0 bg-[#020617]/80 flex flex-col items-center justify-center z-20 backdrop-blur-sm">
+                <div className="w-16 h-16 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mb-4" />
+                <p className="text-cyan-400 font-black tracking-widest text-xs uppercase">Processing Neural Layers...</p>
+              </div>
+            )}
+          </div>
+
+          {/* CONTROL BUTTON */}
+          {selectedImage && !results && (
+            <button 
+              onClick={handleRunAnalysis} 
+              disabled={isAnalyzing}
+              className="w-full bg-cyan-500 hover:bg-cyan-400 text-black py-5 rounded-2xl font-black text-sm uppercase tracking-[0.2em] transition-all shadow-lg shadow-cyan-500/20"
+            >
+              Analyze Cardiac Morphology
+            </button>
+          )}
+
+          {/* AI PROCESSING STAGES */}
+          <div className="grid grid-cols-3 gap-4">
+            <ProcessCard label="Segmentation" active={isAnalyzing} icon={<Activity size={14}/>} />
+            <ProcessCard label="Flow Pattern" active={isAnalyzing} icon={<Wind size={14}/>} />
+            <ProcessCard label="Timing Logic" active={isAnalyzing} icon={<Timer size={14}/>} />
+          </div>
+        </div>
+
+        {/* RIGHT SIDE: OUTPUT LAYER */}
+        <div className="col-span-12 lg:col-span-5">
+          <div className="bg-slate-900/80 p-8 rounded-3xl border border-white/10 shadow-2xl h-full">
+            <div className="flex items-center gap-3 mb-8">
+              <div className="p-2 bg-cyan-500/10 rounded-xl border border-cyan-500/20">
+                <FileSearch className="text-cyan-400" size={20} />
+              </div>
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Diagnostic Output</h3>
+            </div>
+
+            {results ? (
+              <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-700">
+                
+                {/* CLASSIFICATION TICKET */}
+                <div className={`${results.bgColor} ${results.borderColor} border p-6 rounded-2xl text-center`}>
+                  <p className="text-[10px] text-slate-400 font-mono uppercase mb-1">AI Classification</p>
+                  <div className={`text-4xl font-black tracking-tighter ${results.statusColor}`}>
+                    {results.classification}
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <OutputRow label="Opening Efficiency" value={results.efficiency} />
+                  <OutputRow label="Jet Flow Pattern" value={results.jetFlow} />
+                  <OutputRow label="Cycle Timing" value={results.timing} />
+                </div>
+
+                <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="text-yellow-500 shrink-0 mt-0.5" size={16} />
+                    <p className="text-[11px] text-slate-400 leading-relaxed italic">
+                      "Image segmentation indicates mild narrowing at the valve orifice. Doppler waveform shows minor velocity acceleration consistent with Grade 1 dysfunction."
+                    </p>
+                  </div>
+                </div>
+
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-24 text-center opacity-20">
+                <ImageIcon size={48} className="mb-4" />
+                <p className="text-sm font-mono uppercase tracking-widest">Waiting for Scan Data</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+// UI SUB-COMPONENTS
+function ProcessCard({ label, active, icon }) {
+  return (
+    <div className={`p-4 rounded-2xl border transition-all flex flex-col items-center gap-2 ${active ? 'bg-cyan-500/10 border-cyan-500/50 animate-pulse' : 'bg-slate-900 border-white/5'}`}>
+      <div className={active ? 'text-cyan-400' : 'text-slate-500'}>{icon}</div>
+      <span className={`text-[9px] font-black uppercase tracking-tighter ${active ? 'text-cyan-400' : 'text-slate-500'}`}>
+        {label}
+      </span>
+    </div>
+  );
+}
+
+function OutputRow({ label, value }) {
+  return (
+    <div className="flex justify-between items-center py-3 border-b border-white/5">
+      <span className="text-[10px] text-slate-500 font-mono uppercase">{label}</span>
+      <span className="text-sm font-bold text-white">{value}</span>
+    </div>
+  );
+}
+
+--- FILE: C:\Users\GF63-10SC-238MY\Desktop\echoaura\src\components\Dashboard.jsx ---
+
+import React, { useState, useEffect } from 'react';
+import { LineChart, Line, YAxis, ResponsiveContainer, CartesianGrid, Tooltip } from 'recharts';
+import { User, Activity, ShieldAlert, Zap, HeartPulse } from 'lucide-react';
+
+export default function Dashboard() {
+  const [heartData, setHeartData] = useState(Array(20).fill({ val: 72 }));
+  const [metrics, setMetrics] = useState({
+    velocity: 2.4, gradient: 14, vpi: 0.38, eoa: 1.5, at: 72, bpm: 72
+  });
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const newBpm = Math.floor(70 + Math.random() * 10);
+      setHeartData(prev => {
+        const newData = [...prev.slice(1), { val: newBpm }];
+        return newData;
+      });
+      setMetrics(prev => ({ ...prev, bpm: newBpm }));
+    }, 800);
+    return () => clearInterval(interval);
+  }, []);
+
+  const calculateRisk = () => {
+    if (metrics.velocity >= 4.0 || metrics.gradient >= 35 || metrics.eoa < 0.8) {
+      return { level: "CRITICAL", color: "text-red-400", bg: "bg-red-950/40", border: "border-red-500/50" };
+    }
+    return { level: "STABLE", color: "text-emerald-400", bg: "bg-emerald-950/40", border: "border-emerald-500/50" };
+  };
+
+  const risk = calculateRisk();
+
+  return (
+    <div className="p-8 space-y-6 bg-[#020617] min-h-screen text-slate-100">
+      <div className="flex justify-between items-end border-b border-white/10 pb-6">
+        <div>
+          <h1 className="text-4xl font-black tracking-tighter text-white">Clinical Dashboard</h1>
+          <p className="text-slate-400 font-medium">EchoAura AI Patient Telemetry</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-12 gap-6">
+        {/* PANEL 1: PATIENT INFO */}
+        <div className="col-span-12 lg:col-span-4 bg-slate-900/50 p-6 rounded-3xl border border-white/10 shadow-2xl">
+          <div className="flex items-center gap-4 mb-8">
+            <div className="w-16 h-16 bg-slate-800 rounded-2xl flex items-center justify-center border border-white/10">
+              <User className="text-slate-100" size={32} />
+            </div>
+            <div>
+              <h3 className="font-bold text-2xl text-white">Muhammad Irfan</h3>
+              <p className="text-xs text-cyan-400 font-mono font-bold uppercase tracking-widest">Post-Op Day 12</p>
+            </div>
+          </div>
+          <div className="space-y-4">
+            <DataRow label="Procedure" value="Aortic Replacement" />
+            <DataRow label="Material" value="Grade 5 Titanium" />
+            <DataRow label="AI Version" value="EchoAura v2.5" />
+          </div>
+        </div>
+
+        {/* PANEL 2: HEART STATUS (FIXED TOOLTIP) */}
+        <div className="col-span-12 lg:col-span-8 bg-slate-900/50 p-6 rounded-3xl border border-white/10 shadow-2xl">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-red-500/10 rounded-xl border border-red-500/20">
+                <HeartPulse size={20} className="text-red-500" />
+              </div>
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">ECG Real-Time Stream</h3>
+            </div>
+            <div className="flex items-baseline gap-1">
+              <span className="text-4xl font-black font-mono text-white tracking-tighter">{metrics.bpm}</span>
+              <span className="text-xs text-red-500 font-bold uppercase">BPM</span>
+            </div>
+          </div>
+
+          <div className="h-48 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={heartData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1e293b" />
+                <YAxis hide domain={[60, 100]} />
+                
+                {/* TOOLTIP FIX: Added custom styling so text is visible on dark bg */}
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: '#0f172a', 
+                    border: '1px solid #334155', 
+                    borderRadius: '8px',
+                    color: '#f8fafc' 
+                  }}
+                  itemStyle={{ color: '#ef4444', fontWeight: 'bold' }}
+                  labelStyle={{ display: 'none' }} 
+                  cursor={{ stroke: '#334155', strokeWidth: 2 }}
+                />
+
+                <Line 
+                  type="monotone" 
+                  dataKey="val" 
+                  stroke="#ef4444" 
+                  strokeWidth={4} 
+                  dot={false}
+                  activeDot={{ r: 6, fill: '#ef4444', stroke: '#fff', strokeWidth: 2 }} // Shows point on hover
+                  isAnimationActive={false} 
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* PANEL 3: METRICS */}
+        <div className="col-span-12 grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <div className={`lg:col-span-1 ${risk.bg} ${risk.border} border p-8 rounded-3xl flex flex-col items-center justify-center text-center`}>
+             <ShieldAlert className={`${risk.color} mb-4`} size={40} />
+             <h4 className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-2">AI Risk Engine</h4>
+             <div className={`text-5xl font-black tracking-tighter ${risk.color}`}>{risk.level}</div>
+          </div>
+
+          <div className="lg:col-span-3 bg-slate-900/50 p-8 rounded-3xl border border-white/10">
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-8 text-white">Doppler Hemodynamics</h3>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
+              <MetricBox label="Peak Velocity" value={`${metrics.velocity} m/s`} ref="< 3.0" />
+              <MetricBox label="Mean Gradient" value={`${metrics.gradient} mmHg`} ref="< 20" />
+              <MetricBox label="DVI (Index)" value={metrics.vpi} ref="≥ 0.30" />
+              <MetricBox label="EOA Area" value={`${metrics.eoa} cm²`} ref="> 1.2" />
+              <MetricBox label="Acc. Time" value={`${metrics.at} ms`} ref="< 80" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DataRow({ label, value }) {
+  return (
+    <div className="flex justify-between items-center border-b border-white/5 pb-3">
+      <span className="text-[10px] text-slate-400 uppercase font-bold tracking-tight">{label}</span>
+      <span className="text-sm font-bold text-white">{value}</span>
+    </div>
+  );
+}
+
+function MetricBox({ label, value, ref }) {
+  return (
+    <div className="space-y-2">
+      <p className="text-[10px] text-slate-500 uppercase font-black">{label}</p>
+      <p className="text-2xl font-black text-white tracking-tighter">{value}</p>
+      <p className="text-[9px] text-cyan-500 font-mono font-bold uppercase">REF: {ref}</p>
+    </div>
+  );
+}
+
+--- FILE: C:\Users\GF63-10SC-238MY\Desktop\echoaura\src\components\HeroScene.jsx ---
+
+import React, { Suspense } from 'react';
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls, Stage, PerspectiveCamera } from '@react-three/drei';
+import Valve3D from './Valve3D';
+
+export default function HeroScene() {
+  return (
+    <div className="w-full h-full min-h-[400px] bg-transparent">
+      <Canvas shadows dpr={[1, 2]}>
+        <PerspectiveCamera makeDefault position={[0, 2, 6]} fov={40} />
+        
+        {/* Professional Studio Lighting */}
+        <ambientLight intensity={0.5} />
+        <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={2} castShadow />
+        <pointLight position={[-10, -10, -10]} intensity={1} color="#22d3ee" />
+
+        <Suspense fallback={null}>
+          {/* Stage handles the centering and professional floor contact shadows */}
+          <Stage environment="city" intensity={0.6} contactShadow={true} adjustCamera={false}>
+            <Valve3D />
+          </Stage>
+        </Suspense>
+
+        <OrbitControls 
+          enableZoom={false} 
+          autoRotate={false} 
+          makeDefault 
+          minPolarAngle={Math.PI / 3}
+          maxPolarAngle={Math.PI / 1.5}
+        />
+      </Canvas>
+    </div>
+  );
+}
+
+--- FILE: C:\Users\GF63-10SC-238MY\Desktop\echoaura\src\components\ProductViewer.jsx ---
+
+import React, { Suspense, useState, useEffect } from 'react';
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls, PerspectiveCamera, Environment } from '@react-three/drei';
+import Valve3D from './Valve3D';
+
+export default function ProductViewer() {
+  // State for live telemetry data based on EchoAura specs
+  const [metrics, setMetrics] = useState({
+    flowRate: 5.2,
+    pressure: 12,
+    efficiency: 98.4,
+    battery: 100
+  });
+
+  // Simulate real-time hemodynamic monitoring
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setMetrics({
+        flowRate: (5.0 + Math.random() * 0.5).toFixed(2), // L/min
+        pressure: (10 + Math.random() * 4).toFixed(1),   // mmHg gradient
+        efficiency: (98 + Math.random() * 1.5).toFixed(1), // % Opening dynamics
+        battery: 100 // Inductive power status
+      });
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="p-8 h-full flex flex-col gap-6 bg-black text-white font-sans">
+      <header className="flex justify-between items-end border-b border-white/10 pb-4">
+        <div>
+          <h2 className="text-xs font-mono text-cyan-400 tracking-widest uppercase">Biometric Telemetry Link</h2>
+          <h1 className="text-4xl font-bold tracking-tighter">EchoAura Dashboard</h1>
+        </div>
+        <div className="text-right text-[10px] font-mono text-gray-500 uppercase">
+          Device ID: EA-2026-ALPHA <br />
+          Status: Synchronized
+        </div>
+      </header>
+
+      <div className="flex-1 flex flex-col lg:flex-row gap-6 min-h-0">
+        
+        {/* DATA PANEL: Real-time metrics based on EchoAura features */}
+        <div className="lg:w-1/3 flex flex-col gap-4">
+          <div className="grid grid-cols-2 gap-4">
+            <MetricCard label="Flow Velocity" value={`${metrics.flowRate} L/min`} sub="Hemodynamic" />
+            <MetricCard label="Pressure Grad" value={`${metrics.pressure} mmHg`} sub="Pressure/Flow" />
+            <MetricCard label="Valve Aperture" value={`${metrics.efficiency}%`} sub="Opening Dynamics" />
+            <MetricCard label="Power Source" value="Inductive" sub="Wireless" />
+          </div>
+
+          <div className="glass-card p-6 mt-2 bg-white/5 border-white/10 border rounded-lg">
+            <h3 className="text-sm font-bold text-cyan-400 uppercase mb-3 font-mono">Technical Specifications</h3>
+            <ul className="text-[11px] space-y-2 text-gray-300 font-mono">
+              <li><span className="text-gray-500">FRAME:</span> Titanium (Ti-6Al-4V)</li>
+              <li><span className="text-gray-500">LEAFLET:</span> Parylene-based Polymer</li>
+              <li><span className="text-gray-500">AI UNIT:</span> Encrypted RF Telemetry</li>
+              <li><span className="text-gray-500">DIAMETER:</span> 23 mm (Prototype)</li>
+            </ul>
+          </div>
+        </div>
+
+        {/* 3D VIEWPORT */}
+        <div className="flex-1 glass-card border border-white/10 relative bg-[#050505] rounded-xl overflow-hidden">
+          <Canvas shadows>
+            <Suspense fallback={null}>
+              <PerspectiveCamera makeDefault position={[0, 5, 10]} fov={30}/>
+              <Environment preset="city" />
+              <ambientLight intensity={0.5} />
+              <pointLight position={[10, 10, 10]} intensity={2} color="#00f2ff" />
+              <Valve3D />
+              <OrbitControls enablePan={false} />
+            </Suspense>
+          </Canvas>
+          
+          <div className="absolute bottom-4 right-4 pointer-events-none text-right">
+            <p className="text-[9px] font-mono text-cyan-500 uppercase animate-pulse">
+              // AI Control Unit: Analyzing Hemodynamic Data...
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MetricCard({ label, value, sub }) {
+  return (
+    <div className="bg-white/5 border border-white/10 p-4 rounded-lg flex flex-col justify-center">
+      <p className="text-[9px] font-mono text-gray-500 uppercase tracking-tight">{sub}</p>
+      <h4 className="text-gray-400 text-[10px] font-bold uppercase mb-1">{label}</h4>
+      <p className="text-2xl font-bold text-white tracking-tighter">{value}</p>
+    </div>
+  );
+}
+
+--- FILE: C:\Users\GF63-10SC-238MY\Desktop\echoaura\src\components\RealisticValve.jsx ---
+
+import React, { useRef } from "react";
+import { Canvas, useFrame } from "@react-three/fiber";
+import { OrbitControls, Float } from "@react-three/drei";
+import * as THREE from "three";
+
+/*
+REALISTIC AORTIC VALVE OPENING ANIMATION
+EchoAura Concept
+
+Install:
+npm install three @react-three/fiber @react-three/drei
+*/
+
+function Leaflet({ angleOffset }) {
+  const leafletRef = useRef();
+
+  useFrame((state) => {
+    // Heartbeat cycle
+    const t = state.clock.elapsedTime;
+
+    /*
+      Simulate systole/diastole:
+      - opens wider during systole
+      - closes during diastole
+    */
+
+    const beat = (Math.sin(t * 3) + 1) / 2;
+
+    // Opening angle
+    const openAngle = THREE.MathUtils.lerp(
+      0.1,
+      1.0,
+      beat
+    );
+
+    leafletRef.current.rotation.z = openAngle;
+  });
+
+  return (
+    <group rotation={[0, angleOffset, 0]}>
+      <mesh
+        ref={leafletRef}
+        position={[0, 1.1, 0]}
+      >
+        {/* Curved realistic leaflet */}
+        <sphereGeometry
+          args={[
+            1.2,
+            32,
+            32,
+            0,
+            Math.PI / 2.8,
+            0,
+            Math.PI
+          ]}
+        />
+
+        <meshPhysicalMaterial
+          color="#b6f0ff"
+          metalness={0.2}
+          roughness={0.1}
+          transmission={0.7}
+          transparent
+          opacity={0.95}
+          thickness={0.5}
+          clearcoat={1}
+          clearcoatRoughness={0}
+          emissive="#38bdf8"
+          emissiveIntensity={0.15}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+    </group>
+  );
+}
+
+function ValveRing() {
+  return (
+    <mesh rotation={[Math.PI / 2, 0, 0]}>
+      <torusGeometry args={[2, 0.18, 32, 100]} />
+
+      <meshStandardMaterial
+        color="#94e8ff"
+        metalness={1}
+        roughness={0.15}
+        emissive="#0ea5e9"
+        emissiveIntensity={0.4}
+      />
+    </mesh>
+  );
+}
+
+function AIEnergyCore() {
+  const coreRef = useRef();
+
+  useFrame((state) => {
+    const pulse =
+      1 + Math.sin(state.clock.elapsedTime * 3) * 0.08;
+
+    coreRef.current.scale.set(pulse, pulse, pulse);
+  });
+
+  return (
+    <mesh ref={coreRef}>
+      <sphereGeometry args={[0.35, 32, 32]} />
+
+      <meshStandardMaterial
+        color="#67e8f9"
+        emissive="#22d3ee"
+        emissiveIntensity={3}
+      />
+    </mesh>
+  );
+}
+
+function EchoAuraValve() {
+  const groupRef = useRef();
+
+  useFrame(() => {
+    groupRef.current.rotation.y += 0.003;
+  });
+
+  return (
+    <group ref={groupRef}>
+      {/* Metallic Ring */}
+      <ValveRing />
+
+      {/* Three Realistic Leaflets */}
+      <Leaflet angleOffset={0} />
+
+      <Leaflet angleOffset={(Math.PI * 2) / 3} />
+
+      <Leaflet angleOffset={(Math.PI * 4) / 3} />
+
+      {/* AI Core */}
+      <AIEnergyCore />
+    </group>
+  );
+}
+
+export default function App() {
+  return (
+    <div className="w-screen h-screen bg-black">
+      <Canvas camera={{ position: [0, 0, 7], fov: 45 }}>
+        {/* Background */}
+        <color attach="background" args={["#020617"]} />
+
+        {/* Lighting */}
+        <ambientLight intensity={0.4} />
+
+        <directionalLight
+          position={[5, 5, 5]}
+          intensity={2}
+          color="#7dd3fc"
+        />
+
+        <pointLight
+          position={[0, 0, 0]}
+          intensity={3}
+          color="#22d3ee"
+        />
+
+        <spotLight
+          position={[0, 10, 10]}
+          angle={0.3}
+          intensity={2}
+          penumbra={1}
+          color="#38bdf8"
+        />
+
+        {/* Floating Motion */}
+        <Float
+          speed={2}
+          rotationIntensity={0.25}
+          floatIntensity={0.4}
+        >
+          <EchoAuraValve />
+        </Float>
+
+        {/* Mouse Controls */}
+        <OrbitControls
+          enablePan={false}
+          minDistance={5}
+          maxDistance={10}
+        />
+      </Canvas>
+    </div>
+  );
+}
+
+--- FILE: C:\Users\GF63-10SC-238MY\Desktop\echoaura\src\components\Valve3D.jsx ---
+
+import React, { useRef } from 'react';
+import { useFrame } from '@react-three/fiber';
+import * as THREE from 'three';
+
+export default function Valve3D() {
+  const groupRef = useRef();
+  const coreRef = useRef();
+
+  useFrame((state) => {
+    const t = state.clock.getElapsedTime();
+    
+    // 1. Rotate the whole device slowly
+    if (groupRef.current) groupRef.current.rotation.y = t * 0.15;
+    
+    // 2. The "Organic Usage" Animation: 
+    // This makes the center material pulse/stretch like a heartbeat
+    if (coreRef.current) {
+      const pulse = 1 + Math.sin(t * 2) * 0.1; 
+      coreRef.current.scale.set(pulse, 1, pulse);
+    }
+  });
+
+  return (
+    <group ref={groupRef} position={[0, -0.8, 0]}>
+      
+      {/* SOLID TITANIUM CROWN FRAME */}
+      {/* This creates a single continuous ring with 3 peaks */}
+      <mesh>
+        <torusGeometry args={[1.5, 0.15, 16, 100]} />
+        <meshStandardMaterial color="#444" metalness={1} roughness={0.1} />
+      </mesh>
+
+      {[0, 1, 2].map((i) => (
+        <group key={i} rotation={[0, (i * Math.PI * 2) / 3, 0]}>
+          {/* Vertical Strut peaks connecting to the ring */}
+          <mesh position={[0, 1.2, 1.5]}>
+            <cylinderGeometry args={[0.1, 0.1, 2.4, 16]} />
+            <meshStandardMaterial color="#888" metalness={1} />
+          </mesh>
+        </group>
+      ))}
+
+      {/* THE ORGANIC STRETCHED MATERIAL (The Heart) */}
+      <group ref={coreRef}>
+        {[0, 1, 2].map((i) => (
+          <mesh key={i} rotation={[0, (i * Math.PI * 2) / 3, 0]}>
+            <mesh position={[0, 1, 0.4]} rotation={[-Math.PI / 4, 0, 0]}>
+              {/* This shape mimics the 'stretching' polymer in your poster */}
+              <cylinderGeometry args={[1.3, 0.4, 2.2, 32, 1, true, 0, Math.PI * 0.7]} />
+              <meshStandardMaterial 
+                color="#f2e8d5" 
+                side={THREE.DoubleSide} 
+                transparent 
+                opacity={0.85}
+                roughness={0.3}
+              />
+            </mesh>
+          </mesh>
+        ))}
+      </group>
+
+      {/* SENSOR BASE WITH RED GLOW */}
+      <mesh position={[0, -0.2, 0]}>
+        <cylinderGeometry args={[1.6, 1.6, 0.4, 64]} />
+        <meshStandardMaterial 
+          color="#111" 
+          emissive="#ff0000" 
+          emissiveIntensity={0.5} 
+        />
+      </mesh>
+    </group>
+  );
+}
+
+--- FILE: C:\Users\GF63-10SC-238MY\Desktop\echoaura\src\components\ValveModel.jsx ---
+
+import React, { useRef } from 'react';
+import { useFrame } from '@react-three/fiber';
+import { Float, MeshDistortMaterial } from '@react-three/drei';
+
+export default function ValveModel() {
+  const coreRef = useRef();
+  const ringRef = useRef();
+
+  useFrame((state) => {
+    const time = state.clock.getElapsedTime();
+    
+    // Heartbeat pulse effect
+    const pulse = 1 + Math.sin(time * 4) * 0.05;
+    if (coreRef.current) {
+      coreRef.current.scale.set(pulse, pulse, pulse);
+    }
+
+    // Slow technical rotation
+    if (ringRef.current) {
+      ringRef.current.rotation.z = time * 0.5;
+      ringRef.current.rotation.x = time * 0.2;
+    }
+  });
+
+  return (
+    <group>
+      {/* Central Heart Valve Core */}
+      <mesh ref={coreRef}>
+        <sphereGeometry args={[1, 64, 64]} />
+        <MeshDistortMaterial
+          color="#00f2ff"
+          emissive="#00f2ff"
+          emissiveIntensity={2}
+          speed={2}
+          distort={0.3}
+          radius={1}
+        />
+      </mesh>
+
+      {/* Outer Metallic Support Ring */}
+      <mesh ref={ringRef}>
+        <torusGeometry args={[1.5, 0.05, 16, 100]} />
+        <meshStandardMaterial 
+          color="#444" 
+          metalness={1} 
+          roughness={0.1} 
+          emissive="#00f2ff"
+          emissiveIntensity={0.2}
+        />
+      </mesh>
+
+      {/* Secondary Vertical Ring */}
+      <mesh rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[1.6, 0.02, 16, 100]} />
+        <meshStandardMaterial color="#00f2ff" emissive="#00f2ff" emissiveIntensity={0.5} />
+      </mesh>
+
+      {/* Floating data particles */}
+      <Float speed={2} rotationIntensity={0.5} floatIntensity={0.5}>
+        <mesh position={[2, 1, -1]}>
+          <sphereGeometry args={[0.05]} />
+          <meshBasicMaterial color="#ff0055" />
+        </mesh>
+      </Float>
+    </group>
+  );
+}
+
+--- FILE: C:\Users\GF63-10SC-238MY\Desktop\echoaura\src\App.css ---
+
+.counter {
+  font-size: 16px;
+  padding: 5px 10px;
+  border-radius: 5px;
+  color: var(--accent);
+  background: var(--accent-bg);
+  border: 2px solid transparent;
+  transition: border-color 0.3s;
+  margin-bottom: 24px;
+
+  &:hover {
+    border-color: var(--accent-border);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+.hero {
+  position: relative;
+
+  .base,
+  .framework,
+  .vite {
+    inset-inline: 0;
+    margin: 0 auto;
+  }
+
+  .base {
+    width: 170px;
+    position: relative;
+    z-index: 0;
+  }
+
+  .framework,
+  .vite {
+    position: absolute;
+  }
+
+  .framework {
+    z-index: 1;
+    top: 34px;
+    height: 28px;
+    transform: perspective(2000px) rotateZ(300deg) rotateX(44deg) rotateY(39deg)
+      scale(1.4);
+  }
+
+  .vite {
+    z-index: 0;
+    top: 107px;
+    height: 26px;
+    width: auto;
+    transform: perspective(2000px) rotateZ(300deg) rotateX(40deg) rotateY(39deg)
+      scale(0.8);
+  }
+}
+
+#center {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  place-content: center;
+  place-items: center;
+  flex-grow: 1;
+
+  @media (max-width: 1024px) {
+    padding: 32px 20px 24px;
+    gap: 18px;
+  }
+}
+
+#next-steps {
+  display: flex;
+  border-top: 1px solid var(--border);
+  text-align: left;
+
+  & > div {
+    flex: 1 1 0;
+    padding: 32px;
+    @media (max-width: 1024px) {
+      padding: 24px 20px;
+    }
+  }
+
+  .icon {
+    margin-bottom: 16px;
+    width: 22px;
+    height: 22px;
+  }
+
+  @media (max-width: 1024px) {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+#docs {
+  border-right: 1px solid var(--border);
+
+  @media (max-width: 1024px) {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+}
+
+#next-steps ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  gap: 8px;
+  margin: 32px 0 0;
+
+  .logo {
+    height: 18px;
+  }
+
+  a {
+    color: var(--text-h);
+    font-size: 16px;
+    border-radius: 6px;
+    background: var(--social-bg);
+    display: flex;
+    padding: 6px 12px;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    transition: box-shadow 0.3s;
+
+    &:hover {
+      box-shadow: var(--shadow);
+    }
+    .button-icon {
+      height: 18px;
+      width: 18px;
+    }
+  }
+
+  @media (max-width: 1024px) {
+    margin-top: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+
+    li {
+      flex: 1 1 calc(50% - 8px);
+    }
+
+    a {
+      width: 100%;
+      justify-content: center;
+      box-sizing: border-box;
+    }
+  }
+}
+
+#spacer {
+  height: 88px;
+  border-top: 1px solid var(--border);
+  @media (max-width: 1024px) {
+    height: 48px;
+  }
+}
+
+.ticks {
+  position: relative;
+  width: 100%;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    top: -4.5px;
+    border: 5px solid transparent;
+  }
+
+  &::before {
+    left: 0;
+    border-left-color: var(--border);
+  }
+  &::after {
+    right: 0;
+    border-right-color: var(--border);
+  }
+}
+
+--- FILE: C:\Users\GF63-10SC-238MY\Desktop\echoaura\src\App.jsx ---
+
+import React, { useState } from 'react';
+import { LayoutDashboard, Box, SearchCode } from 'lucide-react';
+import Dashboard from './components/Dashboard';
+import ProductViewer from './components/ProductViewer'; // Your Icon 2
+import AiDiagnostics from './components/AiDiagnostics'; // Your Icon 3
+import AiChatbot from './components/AiChatbot';
+
+export default function App() {
+  const [activeTab, setActiveTab] = useState('dashboard');
+
+  return (
+    <div className="flex h-screen bg-[#f8fafc] text-slate-900 overflow-hidden">
+      {/* SIDEBAR NAVIGATION */}
+      <aside className="w-20 lg:w-64 bg-[#0a192f] flex flex-col py-8 border-r border-white/10">
+        <div className="px-6 mb-12 flex justify-center lg:justify-start">
+          <div className="w-10 h-10 bg-cyan-400 rounded-xl flex items-center justify-center">
+            <span className="font-bold text-black">EA</span>
+          </div>
+        </div>
+
+        <nav className="flex-1 w-full space-y-2 px-3">
+          <NavIcon 
+            active={activeTab === 'dashboard'} 
+            onClick={() => setActiveTab('dashboard')}
+            icon={<LayoutDashboard size={22} />} 
+            label="Dashboard" 
+          />
+          <NavIcon 
+            active={activeTab === 'product'} 
+            onClick={() => setActiveTab('product')}
+            icon={<Box size={22} />} 
+            label="EchoAura Sim" 
+          />
+          <NavIcon 
+            active={activeTab === 'analyzer'} 
+            onClick={() => setActiveTab('analyzer')}
+            icon={<SearchCode size={22} />} 
+            label="AI Analyzer" 
+          />
+        </nav>
+      </aside>
+
+      {/* MAIN VIEWPORT */}
+      <main className="flex-1 overflow-y-auto relative bg-[#f1f5f9]">
+        {activeTab === 'dashboard' && <Dashboard />}
+        {activeTab === 'product' && <ProductViewer />}
+        {activeTab === 'analyzer' && <AiDiagnostics />}
+        
+        {/* GLOBAL AI CHATBOT */}
+        <AiChatbot />
+      </main>
+    </div>
+  );
+}
+
+function NavIcon({ active, icon, label, onClick }) {
+  return (
+    <button 
+      onClick={onClick}
+      className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all ${
+        active ? 'bg-cyan-500 text-white shadow-lg' : 'text-slate-400 hover:bg-white/5 hover:text-white'
+      }`}
+    >
+      {icon}
+      <span className="hidden lg:block font-medium text-sm">{label}</span>
+    </button>
+  );
+}
+
+--- FILE: C:\Users\GF63-10SC-238MY\Desktop\echoaura\src\index.css ---
+
+@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background-color: #050505;
+  color: #ffffff;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Glassmorphism Utility */
+.glass-card {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+}
+::-webkit-scrollbar-track {
+  background: #050505;
+}
+::-webkit-scrollbar-thumb {
+  background: #00f2ff;
+  border-radius: 10px;
+}
+
+--- FILE: C:\Users\GF63-10SC-238MY\Desktop\echoaura\src\main.jsx ---
+
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import './index.css'
+import App from './App.jsx'
+
+createRoot(document.getElementById('root')).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+)
