@@ -12,7 +12,23 @@ export default function Dashboard({ patient }) {
   
   const [bpm, setBpm] = useState(patient?.bpmBase || 72);
 
-  // Mock Doppler Metrics - these vary based on patient stability
+  // Sync state cleanly if switching between patients dynamically
+  useEffect(() => {
+    if (patient) {
+      setBpm(patient.bpmBase || 72);
+    }
+  }, [patient]);
+
+  // Early return shield if no patient is selected/loaded yet
+  if (!patient) {
+    return (
+      <div className="p-10 bg-[#020617] min-h-screen text-slate-400 font-mono text-xs uppercase tracking-widest flex items-center justify-center">
+        Initializing Secure Link... Awaiting Telemetry Data
+      </div>
+    );
+  }
+
+  // Safe Mock Doppler Metrics computation with fallbacks
   const metrics = {
     velocity: patient.stability === 'unstable' ? "4.2" : "2.4",
     gradient: patient.stability === 'unstable' ? "42" : "14",
@@ -20,31 +36,90 @@ export default function Dashboard({ patient }) {
   };
 
   useEffect(() => {
-    if (isPaused) return;
+    // Extra safety shield inside lifecycle to stop unmounted runtime crash
+    if (isPaused || !patient || !patient.condition) return;
 
     let step = 0;
-    const isUnstable = patient?.stability === "unstable";
+    const isUnstable = patient.stability === "unstable";
+    const cond = patient.condition || "";
+
+    // --- CLINICAL PATHOLOGY CLASSIFICATIONS ---
+    const isBrady = cond.includes("Bradycardia") || cond.includes("Block");
+    const isTachy = cond.includes("Tachycardia");
+    const isAfib = cond.includes("Fibrillation") || cond.includes("Arrhythmia") || cond.includes("SVT");
+    const isVtach = cond.includes("Ventricular Tachycardia");
+
+    // Dynamic wave cycle width configuration
+    const wavelength = isTachy ? 60 : isBrady ? 140 : isVtach ? 50 : 100;
     
     const generateECGPoint = (x, amplitudeMult = 1, shift = 0) => {
-      const cycle = (x + shift) % 100;
-      const noise = isUnstable ? (Math.random() * 4 - 2) : 0;
+      // Calculate responsive step index sequence
+      let cycle = (x + shift) % wavelength;
       
+      // AFIB: Irregular time-interval axis shifting to simulate arrhythmia pacing
+      if (isAfib) {
+        cycle = (x + shift + Math.floor(Math.sin(x * 0.5) * 8)) % 90;
+      }
+
+      // Base line trace noise configuration
+      let noise = isUnstable ? (Math.random() * 5 - 2.5) : 0;
+      if (isAfib) noise += (Math.random() * 4 - 2); // Chaotic f-waves in background baseline
+
       let label = "";
-      if (cycle === 15) label = "P";
-      if (cycle === 25) label = "Q";
-      if (cycle === 28) label = "R"; 
-      if (cycle === 31) label = "S";
-      if (cycle === 62) label = "T";
-      
       let val = noise;
-      if (cycle > 10 && cycle < 20) val += Math.sin((cycle - 10) * (Math.PI / 10)) * (3 * amplitudeMult);
-      if (cycle === 25) val -= 4 * amplitudeMult;
-      if (cycle === 28) val += (isUnstable ? 65 : 45) * amplitudeMult;
-      if (cycle === 31) val -= 8 * amplitudeMult;
-      if (cycle > 50 && cycle < 75) val += Math.sin((cycle - 50) * (Math.PI / 25)) * (7 * amplitudeMult);
+
+      // 1. DANGEROUS VENTRICULAR TACHYCARDIA COMPLEX ROUTINE (Continuous Sawtooth / Tombstones)
+      if (isVtach) {
+        const rad = (cycle / wavelength) * Math.PI * 2;
+        val += Math.sin(rad) * 35 * amplitudeMult + Math.sin(rad * 2) * 12 * amplitudeMult;
+        return { val, name: "" }; 
+      }
+
+      // --- STRUCTURAL COMPLEX CALCULATION WINDOWS (P-Q-R-S-T Tracking Points) ---
+      const pStart = 10, pEnd = 20, pPeak = 15;
+      const qPt = 25, rPt = 28, sPt = 31;
+      const tStart = 50, tEnd = 75, tPeak = 62;
+
+      // Conditional Label Placement Assignments
+      if (cycle === pPeak && !isAfib) label = "P"; // AFib lacks structured P waves
+      if (cycle === qPt) label = "Q";
+      if (cycle === rPt) label = "R"; 
+      if (cycle === sPt) label = "S";
+      if (cycle === tPeak) label = "T";
+
+      // P-Wave Component (Atrial Contraction)
+      if (!isAfib && cycle > pStart && cycle < pEnd) {
+        val += Math.sin((cycle - pStart) * (Math.PI / (pEnd - pStart))) * (3 * amplitudeMult);
+      }
+      
+      // Q-Dip (Negative Deflection)
+      if (cycle === qPt) val -= 4 * amplitudeMult;
+      
+      // R-Peak (Main Ventricular Depolarization Spike)
+      if (cycle === rPt) {
+        let rHeight = isUnstable ? 65 : 45;
+        if (isTachy) rHeight = 55;
+        val += rHeight * amplitudeMult;
+      }
+      
+      // S-Dip (Terminal Negative Deflection)
+      if (cycle === sPt) val -= 8 * amplitudeMult;
+      
+      // T-Wave Component (Ventricular Recovery phase)
+      if (cycle > tStart && cycle < tEnd) {
+        let tHeight = 7;
+        if (isBrady) tHeight = 4; // Flattened recovery cycles
+        val += Math.sin((cycle - tStart) * (Math.PI / (tEnd - tStart))) * (tHeight * amplitudeMult);
+      }
       
       return { val, name: label };
     };
+
+    // Determine processing interval clock ticks based on pathology speed properties
+    let tickSpeed = 50; 
+    if (isTachy) tickSpeed = 30;  
+    if (isVtach) tickSpeed = 25;  
+    if (isBrady) tickSpeed = 80;  
 
     const interval = setInterval(() => {
       const p1 = generateECGPoint(step, 0.8);
@@ -57,14 +132,17 @@ export default function Dashboard({ patient }) {
         leadIII: [...prev.leadIII.slice(1), p3],
       }));
 
-      if (step % 50 === 0) setBpm((patient?.bpmBase || 72) + Math.floor(Math.random() * (isUnstable ? 12 : 3)));
+      // Adjust numeric display telemetry variables using random baseline drift
+      if (step % 40 === 0) {
+        const variance = isUnstable ? 14 : 4;
+        const drift = Math.floor(Math.random() * variance) - (variance / 2);
+        setBpm(Math.max(40, Math.min(220, Math.floor((patient.bpmBase || 72) + drift))));
+      }
       step++;
-    }, isUnstable ? 35 : 50);
+    }, tickSpeed);
 
     return () => clearInterval(interval);
   }, [patient, isPaused]);
-
-  if (!patient) return <div className="p-10 text-white font-mono uppercase">Initializing Secure Link...</div>;
 
   return (
     <div className="p-8 space-y-6 bg-[#020617] min-h-screen text-slate-100 font-sans">
@@ -99,7 +177,7 @@ export default function Dashboard({ patient }) {
       </div>
 
       <div className="grid grid-cols-12 gap-6">
-        {/* LEFT: PATIENT CARD (Simplified) */}
+        {/* LEFT: PATIENT BIO INFOCARD */}
         <div className="col-span-12 lg:col-span-3 space-y-6">
           <div className="bg-slate-900/40 p-6 rounded-[2rem] border border-white/10 backdrop-blur-md">
             <div className="w-16 h-16 bg-slate-800 rounded-2xl flex items-center justify-center border border-white/10 mb-6">
@@ -107,12 +185,14 @@ export default function Dashboard({ patient }) {
             </div>
             
             <h3 className="font-black text-2xl text-white tracking-tighter mb-1 uppercase leading-none">{patient.name}</h3>
-            <p className="text-[10px] text-slate-500 font-mono tracking-tighter mb-4">{patient.id}</p>
+            <p className="text-[10px] text-slate-500 font-mono tracking-tighter mb-2">{patient.id}</p>
+            <p className="text-[11px] text-cyan-400 font-mono uppercase font-bold tracking-tight mb-4">{patient.condition}</p>
             
             <div className="pt-4 border-t border-white/5">
                 <span className={`text-[10px] font-black px-4 py-1.5 rounded-full border ${
                     patient.status === 'CRITICAL' ? 'border-red-500 text-red-400 bg-red-500/10' :
                     patient.status === 'POST-SURGERY' ? 'border-cyan-500 text-cyan-400 bg-cyan-500/10' :
+                    patient.status === 'OBSERVATION' ? 'border-yellow-500 text-yellow-400 bg-yellow-500/10' :
                     'border-emerald-500 text-emerald-400 bg-emerald-500/10'
                 }`}>
                     {patient.status}
@@ -127,14 +207,14 @@ export default function Dashboard({ patient }) {
           </div>
         </div>
 
-        {/* CENTER: TRIPLE ECG STACK */}
+        {/* CENTER: TRIPLE REAL-TIME RECHARTS ECG STACK */}
         <div className="col-span-12 lg:col-span-6 space-y-4">
-           <ECGLead label="Lead I (Lateral)" data={leads.leadI} color={patient.stability === 'unstable' ? "#f43f5e" : "#22d3ee"} isPaused={isPaused} />
-           <ECGLead label="Lead II (Inferior)" data={leads.leadII} color={patient.stability === 'unstable' ? "#f43f5e" : "#fbbf24"} isPaused={isPaused} />
-           <ECGLead label="Lead III (Inferior)" data={leads.leadIII} color={patient.stability === 'unstable' ? "#f43f5e" : "#a855f7"} isPaused={isPaused} />
+           <ECGLead label="Lead I (Lateral)" data={leads.leadI} color={patient.stability === 'unstable' ? "#ef4444" : "#22d3ee"} isPaused={isPaused} />
+           <ECGLead label="Lead II (Inferior)" data={leads.leadII} color={patient.stability === 'unstable' ? "#ef4444" : "#fbbf24"} isPaused={isPaused} />
+           <ECGLead label="Lead III (Inferior)" data={leads.leadIII} color={patient.stability === 'unstable' ? "#ef4444" : "#a855f7"} isPaused={isPaused} />
         </div>
 
-        {/* RIGHT: HEMODYNAMIC PANEL */}
+        {/* RIGHT: HEMODYNAMIC DOPPLER STREAM DATA PANEL */}
         <div className="col-span-12 lg:col-span-3 bg-slate-900/40 p-6 rounded-[2rem] border border-white/10 shadow-xl">
             <div className="flex items-center gap-2 mb-8 pb-4 border-b border-white/5">
                 <Activity size={18} className="text-cyan-400" />
@@ -193,6 +273,7 @@ function ECGLead({ label, data, color, isPaused }) {
   );
 }
 
+// Sub-component rendering individual clinical evaluation boxes
 function MetricBox({ label, value, ref, alert }) {
     return (
         <div className="relative">
